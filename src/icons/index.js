@@ -1,9 +1,7 @@
-import Vue from 'vue'
-import SvgIcon from '@/components/SvgIcon'// svg component
+import SvgIcon from '@/components/SvgIcon.vue'// svg component
 
-// register globally
-Vue.component('svg-icon', SvgIcon)
+// This will be registered globally via the main app
+export { SvgIcon }
 
-const req = require.context('./svg', false, /\.svg$/)
-const requireAll = requireContext => requireContext.keys().map(requireContext)
-requireAll(req)
+// SVG files will be processed by vite-plugin-svg-icons automatically
+// No need to manually import them like in webpack

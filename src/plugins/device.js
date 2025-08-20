@@ -1,6 +1,4 @@
-import Vue from 'vue'
-
-Vue.prototype.$getOS = () => {
+const getOS = () => {
   let ua = navigator.userAgent,
     isWindowsPhone = /(?:Windows Phone)/.test(ua),
     isSymbian = /(?:SymbianOS)/.test(ua) || isWindowsPhone,
@@ -18,3 +16,11 @@ Vue.prototype.$getOS = () => {
     isPc: isPc
   };
 }
+
+export default {
+  install(app) {
+    app.config.globalProperties.$getOS = getOS
+  }
+}
+
+export { getOS }

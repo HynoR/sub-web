@@ -1,4 +1,7 @@
-import Vue from 'vue'
-import VueParticles from 'vue-particles'
+import Particles from 'vue3-particles'
 
-Vue.use(VueParticles)
+export default {
+  install(app) {
+    app.use(Particles)
+  }
+}
