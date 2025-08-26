@@ -4,7 +4,7 @@
     <header class="app-header">
       <div class="flex items-center justify-between max-w-7xl mx-auto">
         <div class="flex items-center space-x-3">
-          <img src="@/assets/vg2.webp" alt="Logo" class="w-8 h-8" />
+          <img src="@/assets/vg6.webp" alt="Logo" class="w-8 h-8" />
           <div>
             <h1 class="app-title">Sub Converter</h1>
             <p class="app-subtitle">订阅链接转换工具</p>
