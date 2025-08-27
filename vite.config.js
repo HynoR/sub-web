@@ -22,7 +22,7 @@ export default defineConfig({
         skipWaiting: true,
         runtimeCaching: []
       },
-      includeAssets: ['favicon.ico', 'icons/**/*.png', 'robots.txt'],
+      includeAssets: ['favicon.ico', 'icons/**/*.png', 'robots.txt','ads.txt'],
       manifest: {
         name: 'SubConverter',
         short_name: 'SubConverter',
