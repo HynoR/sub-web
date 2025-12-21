@@ -46,7 +46,6 @@
         <div class="form-group">
           <label class="form-label">客户端</label>
           <select v-model="form.clientType" class="input-field w-full">
-            <option value="">请选择客户端类型</option>
             <option v-for="(v, k) in options.clientTypes" :key="k" :value="v">
               {{ k }}
             </option>
@@ -108,6 +107,36 @@
                   ></path>
                 </svg>
                 <span>配置示例</span>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Backend 定制</label>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input
+                v-model="form.customBackend"
+                :readonly="!form.useCustomBackend"
+                class="input-field flex-1 sm:rounded-r-none"
+                :class="{
+                  'bg-theme-input text-theme-placeholder':
+                    !form.useCustomBackend,
+                }"
+                placeholder="Backend 地址"
+              />
+              <button
+                @click="form.useCustomBackend = !form.useCustomBackend"
+                type="button"
+                class="sm:rounded-l-none sm:border-l-0 flex items-center justify-center space-x-2 whitespace-nowrap"
+                :class="form.useCustomBackend ? 'btn-primary' : 'btn-secondary'"
+              >
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fill-rule="evenodd"
+                    d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                <span>{{ form.useCustomBackend ? "使用默认" : "自定义" }}</span>
               </button>
             </div>
           </div>
@@ -487,11 +516,12 @@
           <a
             href="https://github.com/tindy2013/subconverter"
             target="_blank"
-            class="text-primary-400 hover:text-primary-300  transition-colors"
-          >Subconverter
+            class="text-primary-400 hover:text-primary-300 transition-colors"
+            >Subconverter
           </a>
- 
-          by tindy2013 || Frontend Code by <span class="text-theme-primary font-medium">Rarako</span>
+
+          by tindy2013 || Frontend Code by
+          <span class="text-theme-primary font-medium">Rarako</span>
         </p>
       </div>
     </footer>
@@ -499,13 +529,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, getCurrentInstance } from "vue";
+import { ref, reactive, onMounted, watch, getCurrentInstance } from "vue";
 
 // Environment variables
 const remoteConfigSample = import.meta.env.VITE_APP_SUBCONVERTER_REMOTE_CONFIG;
 const subDocAdvanced = import.meta.env.VITE_APP_SUBCONVERTER_DOC_ADVANCED;
 const defaultBackend =
   import.meta.env.VITE_APP_SUBCONVERTER_DEFAULT_BACKEND + "/sub?";
+const nextBackend =
+  import.meta.env.VITE_APP_SUBCONVERTER_NEXT_BACKEND + "/sub?";
 const configUploadBackend = import.meta.env.VITE_APP_CONFIG_UPLOAD_API;
 
 // Get global properties
@@ -518,6 +550,7 @@ const options = reactive({
   clientTypes: {
     ClashMeta: "clash-meta",
     Clash: "clash",
+    Ninja: "ninja",
     Surge: "surge&ver=4",
     Quantumult: "quan",
     QuantumultX: "quanx",
@@ -724,6 +757,8 @@ const form = reactive({
   appendType: false,
   insert: false,
   new_name: true,
+  useCustomBackend: false,
+  customBackend: "",
   tpl: {
     surge: {
       doh: false,
@@ -787,21 +822,32 @@ const makeUrl = () => {
     return false;
   }
 
-  const backend = defaultBackend;
+  // Select backend based on custom backend or client type
+  let backend;
+  if (form.useCustomBackend && form.customBackend) {
+    // Use custom backend if enabled (ignore ninja logic)
+    backend = form.customBackend.endsWith("/sub?")
+      ? form.customBackend
+      : form.customBackend + "/sub?";
+  } else {
+    // Use default logic: ninja uses nextBackend, others use defaultBackend
+    backend = form.clientType === "ninja" ? nextBackend : defaultBackend;
+  }
   let sourceSub = form.sourceSubUrl;
   sourceSub = sourceSub.replace(/(\n|\r|\n\r)/g, "|");
 
   let isMeta = false;
+  let targetClientType = form.clientType;
   if (form.clientType === "clash-meta") {
-    // 改变为 clash
-    form.clientType = "clash";
+    // 使用临时变量，不修改 form.clientType
+    targetClientType = "clash";
     isMeta = true;
   }
 
   customSubUrl.value =
     backend +
     "target=" +
-    form.clientType +
+    targetClientType +
     "&url=" +
     encodeURIComponent(sourceSub) +
     "&insert=" +
@@ -851,7 +897,7 @@ const makeUrl = () => {
       customSubUrl.value += "&surge.doh=true";
     }
 
-    if (form.clientType === "clash") {
+    if (form.clientType === "clash" || form.clientType === "clash-meta") {
       if (form.tpl.clash.doh === true) {
         customSubUrl.value += "&clash.doh=true";
       }
@@ -908,6 +954,12 @@ const confirmUploadConfig = () => {
 const saveSubUrl = () => {
   if (form.sourceSubUrl !== "") {
     setLocalStorageItem("sourceSubUrl", form.sourceSubUrl);
+  }
+};
+
+const saveClientType = () => {
+  if (form.clientType !== "") {
+    setLocalStorageItem("clientType", form.clientType);
   }
 };
 
@@ -970,8 +1022,36 @@ if (import.meta.env.VITE_APP_USE_STORAGE === "true") {
   form.sourceSubUrl = getLocalStorageItem("sourceSubUrl");
 }
 
+// Watch clientType changes and save to localStorage
+watch(
+  () => form.clientType,
+  (newValue) => {
+    if (newValue && import.meta.env.VITE_APP_USE_STORAGE === "true") {
+      saveClientType();
+    }
+    // Update customBackend display when clientType changes (if not using custom backend)
+    if (!form.useCustomBackend) {
+      const currentBackend =
+        newValue === "ninja" ? nextBackend : defaultBackend;
+      form.customBackend = currentBackend.replace("/sub?", "");
+    }
+  }
+);
+
 onMounted(() => {
-  form.clientType = "clash";
+  // Load clientType from localStorage if available, otherwise use default
+  if (import.meta.env.VITE_APP_USE_STORAGE === "true") {
+    const savedClientType = getLocalStorageItem("clientType");
+    form.clientType = savedClientType || "clash-meta";
+  } else {
+    form.clientType = "clash-meta";
+  }
+
+  // Initialize customBackend with current backend based on clientType
+  // Remove "/sub?" suffix for display, it will be added when generating URL
+  const initialBackend =
+    form.clientType === "ninja" ? nextBackend : defaultBackend;
+  form.customBackend = initialBackend.replace("/sub?", "");
 
   // Check for 'link' parameter in URL and auto-fill sourceSubUrl
   const urlParams = new URLSearchParams(window.location.search);
