@@ -842,6 +842,9 @@ const makeUrl = () => {
     // 使用临时变量，不修改 form.clientType
     targetClientType = "clash";
     isMeta = true;
+  } else if (form.clientType === "ninja") {
+    // ninja 使用 clash 格式，但不修改 form.clientType
+    targetClientType = "clash";
   }
 
   customSubUrl.value =
@@ -897,7 +900,7 @@ const makeUrl = () => {
       customSubUrl.value += "&surge.doh=true";
     }
 
-    if (form.clientType === "clash" || form.clientType === "clash-meta") {
+    if (form.clientType === "clash" || form.clientType === "clash-meta" || form.clientType === "ninja") {
       if (form.tpl.clash.doh === true) {
         customSubUrl.value += "&clash.doh=true";
       }
